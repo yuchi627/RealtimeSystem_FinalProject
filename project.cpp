@@ -141,7 +141,7 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 			memset(buf,'\0',buf_size);
 			fin.getline(buf,sizeof(buf),' ');
 			sscanf(buf, "%d", &delay);
-			printf("delay=%d\n",delay);
+			//printf("delay=%d\n",delay);
 			for(int i=0; i < med_data.size();++i){
 				if( (med_data[i].realEat + med_data[i].longT) < eat ){
 					if((delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (med_data[i].realEat + int((med_data[i].te + med_data[i].tb)/2)+delay))){ //hit
@@ -180,7 +180,7 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 						last_eat_time = med_data[i].realEat;
 					}
 					else{ //miss
-						printf("id=%d,miss\n",med_data[i].id);	
+						//printf("id=%d,miss\n",med_data[i].id);	
 						med_data[i].realEat=eat;
 						cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
 						++ *miss;
@@ -210,11 +210,11 @@ int main(void){
 	vector<med> med_data;
 	int hit,miss,take_med_times,hyperperiod,Maximum_idle_time;
 	read_file(med_data);
-	print_task(med_data);
+	//print_task(med_data);
 	schedule(&hit,&miss,&take_med_times,&hyperperiod,&Maximum_idle_time,med_data);
 	float hitRate =  hit / float(hit + miss);
 	cout<< "hit rate = " << hitRate << endl;
-	cout<< "take_med_times= " << take_med_times << " hyperperiod= " << hyperperiod << endl;
+	//cout<< "take_med_times= " << take_med_times << " hyperperiod= " << hyperperiod << endl;
 	float Grouping = take_med_times / (hyperperiod/float(1440));
 	cout<< "Grouping= " << Grouping << endl;
 	cout<< "Maximum idle time = " << Maximum_idle_time << endl;
