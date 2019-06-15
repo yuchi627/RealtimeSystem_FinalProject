@@ -211,12 +211,13 @@ int main(void){
 	int hit,miss,take_med_times,hyperperiod,Maximum_idle_time;
 	read_file(med_data);
 	//print_task(med_data);
+	cout<<"Scheduling result: "<<endl;
 	schedule(&hit,&miss,&take_med_times,&hyperperiod,&Maximum_idle_time,med_data);
 	float hitRate =  hit / float(hit + miss);
-	cout<< "hit rate = " << hitRate << endl;
 	//cout<< "take_med_times= " << take_med_times << " hyperperiod= " << hyperperiod << endl;
 	float Grouping = take_med_times / (hyperperiod/float(1440));
-	cout<< "Grouping= " << Grouping << endl;
+	cout<< "hit rate = " << hitRate << endl;
+	cout<< "Average frequency of medicine-taking per day= " << Grouping << endl;
 	cout<< "Maximum idle time = " << Maximum_idle_time << endl;
 	return 0;
 }
