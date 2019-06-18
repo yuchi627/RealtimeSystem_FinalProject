@@ -144,36 +144,40 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 			//printf("delay=%d\n",delay);
 			for(int i=0; i < med_data.size();++i){
 				if( (med_data[i].realEat + med_data[i].longT) < eat ){
-					if((delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (med_data[i].realEat + int((med_data[i].te + med_data[i].tb)/2)+delay))){ //hit
-						med_data[i].realEat+=delay;
+					int next_eat = med_data[i].realEat + int((med_data[i].te + med_data[i].tb)/2);
+					cout << "Take Medicine " << med_data[i].id << " at "<< next_eat <<endl;
+					if((delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (next_eat + delay))){ //hit
+						med_data[i].realEat += delay;
 					}
-					else if((delay<0) && ((med_data[i].realEat + med_data[i].shortT) <= (med_data[i].realEat + int((med_data[i].te + med_data[i].tb)/2)+delay))){
-						med_data[i].realEat+=delay;
+					else if((delay<0) && ((med_data[i].realEat + med_data[i].shortT) <= (next_eat + delay))){
+						med_data[i].realEat += delay;
 					}	
 					med_data[i].realEat += int((med_data[i].te + med_data[i].tb)/2);
 					if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 						*Maximum_idle_time = med_data[i].realEat - last_eat_time;
 					last_eat_time = med_data[i].realEat;
-					cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+					//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
 					++ *hit;
 					++ *take_med_times;
 					break;
 
 				}
 				else if( ((med_data[i].realEat + med_data[i].longT) >= eat) && ((med_data[i].realEat + med_data[i].shortT) <= eat)){
+					cout << "Take Medicine " << med_data[i].id << " at " << eat << endl;
+					++count;
 					if((delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (eat+delay))){
-						med_data[i].realEat=delay+eat;
-						cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
-						++count;
+						med_data[i].realEat = delay+eat;
+						//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+						//++count;
 						++ *hit;
 						if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 							*Maximum_idle_time = med_data[i].realEat - last_eat_time;
 						last_eat_time = med_data[i].realEat;
 					}
 					else if((delay<0) && ((med_data[i].realEat + med_data[i].shortT) <= (eat+delay))){
-						med_data[i].realEat=delay+eat;
-						cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
-						++count;
+						med_data[i].realEat = delay+eat;
+						//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+						//++count;
 						++ *hit;
 						if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 							*Maximum_idle_time = med_data[i].realEat - last_eat_time;
@@ -181,8 +185,8 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 					}
 					else{ //miss
 						//printf("id=%d,miss\n",med_data[i].id);	
-						med_data[i].realEat=eat;
-						cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+						med_data[i].realEat = eat;
+						//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
 						++ *miss;
 						++ *take_med_times;
 						if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
@@ -197,9 +201,10 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 			}
 			if(count != 0)
 				++ *take_med_times;
-			if(count==m){
+			if(count==m){	//hyperperiod
 				flag=1;
-				*hyperperiod = med_data[0].realEat;
+				*hyperperiod = eat;
+				//*hyperperiod = med_data[0].realEat;
 			}
 		}
 	}
@@ -214,10 +219,9 @@ int main(void){
 	cout<<"Scheduling result: "<<endl;
 	schedule(&hit,&miss,&take_med_times,&hyperperiod,&Maximum_idle_time,med_data);
 	float hitRate =  hit / float(hit + miss);
-	//cout<< "take_med_times= " << take_med_times << " hyperperiod= " << hyperperiod << endl;
 	float Grouping = take_med_times / (hyperperiod/float(1440));
-	cout<< "hit rate = " << hitRate << endl;
 	cout<< "Average frequency of medicine-taking per day= " << Grouping << endl;
+	cout<< "hit rate = " << hitRate << endl;
 	cout<< "Maximum idle time = " << Maximum_idle_time << endl;
 	return 0;
 }
