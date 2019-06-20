@@ -7,6 +7,10 @@
 #include <fstream>
 using namespace std;
 #define buf_size 10
+
+const char* input = "test/Testcase0.txt";
+const char* RandomTable = "test/RandomTable.txt";
+
 typedef struct medicine{
 	int id;
 	int shortT;
@@ -42,7 +46,7 @@ void print_task(vector<med> &t){
 }
 void read_file(vector<med> &med_d){
 	fstream fin;
-	const char* input = "input.txt";
+	
 	fin.open(input,ios::in);
 	char buf[buf_size];
 	memset(buf,'\0',buf_size);
@@ -118,8 +122,7 @@ int eat_time(vector<med> med_data){
 }
 void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *Maximum_idle_time, vector<med> med_data){
 	fstream fin;
-	const char* input = "RandomTable.txt";
-	fin.open(input,ios::in);
+	fin.open(RandomTable,ios::in);
 	char buf[buf_size];
 	int m = med_data.size();
 	int flag=0;
@@ -133,32 +136,55 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 		int finish=0;
 		int eat = eat_time(med_data);
 		te_sort(med_data);
+		bool delay_flag = true;	// read delay
+		int last_delay = 0;
+		int last_real_eat = 0;
+		bool first_delay = true;
 		while(finish!=m){
 			finish=0;
 			int delay=0;
 			int count=0; // hyper period
 			te_sort(med_data);
-			memset(buf,'\0',buf_size);
-			fin.getline(buf,sizeof(buf),' ');
-			sscanf(buf, "%d", &delay);
-			//printf("delay=%d\n",delay);
+			if(delay_flag){
+				memset(buf,'\0',buf_size);
+				fin.getline(buf,sizeof(buf),' ');
+				sscanf(buf, "%d", &delay);
+			}
+			if(first_delay){
+				last_delay = delay;
+				first_delay = false;
+			}
 			for(int i=0; i < med_data.size();++i){
 				if( (med_data[i].realEat + med_data[i].longT) < eat ){
 					int next_eat = med_data[i].realEat + int((med_data[i].te + med_data[i].tb)/2);
+					//cout<<"next eat "<<next_eat<<" last real eat  "<<last_real_eat<<endl;
 					cout << "Take Medicine " << med_data[i].id << " at "<< next_eat <<endl;
-					if((delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (next_eat + delay))){ //hit
-						med_data[i].realEat += delay;
+					if(next_eat == last_real_eat){
+						//printf("delay flag \n");
+						delay_flag = false;
 					}
-					else if((delay<0) && ((med_data[i].realEat + med_data[i].shortT) <= (next_eat + delay))){
-						med_data[i].realEat += delay;
+					else
+					{
+						//printf("delay flag down\n");
+						last_real_eat = next_eat;
+						last_delay = delay;
+						delay_flag = true;
+						++ *take_med_times;
+					}
+					//printf("delay=%d\n",last_delay);
+					if((last_delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (next_eat + last_delay))){ //hit
+						med_data[i].realEat += last_delay;
+					}
+					else if((last_delay<0) && ((med_data[i].realEat + med_data[i].shortT) <= (next_eat + last_delay))){
+						med_data[i].realEat += last_delay;
 					}	
 					med_data[i].realEat += int((med_data[i].te + med_data[i].tb)/2);
 					if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 						*Maximum_idle_time = med_data[i].realEat - last_eat_time;
 					last_eat_time = med_data[i].realEat;
-					//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+					//cout<<"Take Medicine "<<med_data[i].id<<" real1 at "<<med_data[i].realEat<<endl;
 					++ *hit;
-					++ *take_med_times;
+					
 					break;
 
 				}
@@ -166,9 +192,13 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 					cout << "Take Medicine " << med_data[i].id << " at " << eat << endl;
 					++count;
 					if((delay>=0) && ((med_data[i].realEat + med_data[i].longT) >= (eat+delay))){
+						//cout<<"real eat " <<med_data[i].realEat<<" longeat "<< med_data[i].longT;
+						//cout<<" eat "<<eat << " delay "<<delay<<endl;
 						med_data[i].realEat = delay+eat;
-						//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+						//cout<<"Take Medicine "<<med_data[i].id<<" real2 at "<<med_data[i].realEat<<endl;
 						//++count;
+						
+						//printf("hit1\n");
 						++ *hit;
 						if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 							*Maximum_idle_time = med_data[i].realEat - last_eat_time;
@@ -176,8 +206,9 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 					}
 					else if((delay<0) && ((med_data[i].realEat + med_data[i].shortT) <= (eat+delay))){
 						med_data[i].realEat = delay+eat;
-						//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+						//cout<<"Take Medicine "<<med_data[i].id<<" real3 at "<<med_data[i].realEat<<endl;
 						//++count;
+						//printf("hit2\n");
 						++ *hit;
 						if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 							*Maximum_idle_time = med_data[i].realEat - last_eat_time;
@@ -186,9 +217,10 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 					else{ //miss
 						//printf("id=%d,miss\n",med_data[i].id);	
 						med_data[i].realEat = eat;
-						//cout<<"Take Medicine "<<med_data[i].id<<" at "<<med_data[i].realEat<<endl;
+						//cout<<"Take Medicine "<<med_data[i].id<<" miss at "<<med_data[i].realEat<<endl;
+						//printf("miss\n");
 						++ *miss;
-						++ *take_med_times;
+						//++ *take_med_times;
 						if(*Maximum_idle_time < (med_data[i].realEat - last_eat_time))
 							*Maximum_idle_time = med_data[i].realEat - last_eat_time;
 						last_eat_time = med_data[i].realEat;
@@ -212,6 +244,7 @@ void schedule(int *hit, int *miss, int *take_med_times, int *hyperperiod, int *M
 
 }
 int main(void){
+	
 	vector<med> med_data;
 	int hit,miss,take_med_times,hyperperiod,Maximum_idle_time;
 	read_file(med_data);
